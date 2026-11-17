@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
-  Clock3, Shuffle, Repeat, Upload, Headphones, PanelLeftClose, Menu, X
+  Clock3, Shuffle, Repeat, Upload, Headphones, PanelLeftClose, Menu, X,
+  Sparkles, Eye, EyeOff, Send, ArrowLeft
 } from "lucide-react";
 
 type Track = { id: number; title: string; artist: string; album: string; duration: string; cover: string; src?: string };
@@ -21,6 +22,13 @@ const readSaved = (key: string, fallback: number[]) => {
 };
 
 export default function App() {
+  const [session, setSession] = useState(() => localStorage.getItem("nexmusic.session.email") || "");
+  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot">("login");
+  const [authMethod, setAuthMethod] = useState<"email" | "telegram">("email");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
   const [tracks, setTracks] = useState<Track[]>(demoTracks);
   const [current, setCurrent] = useState<Track>(demoTracks[0]);
   const [playing, setPlaying] = useState(false);
@@ -86,6 +94,49 @@ export default function App() {
   };
   const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
+  const submitAuth = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthMessage("");
+    if (authMode === "forgot") {
+      setAuthMessage("Восстановление пароля станет доступно после подключения сервера авторизации.");
+      return;
+    }
+    if (authPassword.length < 6) {
+      setAuthMessage("Пароль должен содержать не менее 6 символов.");
+      return;
+    }
+    // Temporary local demo session only. Password is never stored.
+    localStorage.setItem("nexmusic.session.email", authEmail.trim());
+    setSession(authEmail.trim());
+  };
+
+  if (!session) return <main className="auth-screen">
+    <div className="auth-orb auth-orb-one"/><div className="auth-orb auth-orb-two"/>
+    <section className="auth-card">
+      <div className="auth-brand">
+        <div className="auth-star"><Sparkles size={27} strokeWidth={1.7}/></div>
+        <h1>NEXMUSIC</h1>
+        <p>Твоя музыка ближе</p>
+      </div>
+      <div className="auth-tabs">
+        <button className={authMethod === "email" ? "active" : ""} onClick={() => { setAuthMethod("email"); setAuthMessage(""); }}>Email</button>
+        <button className={authMethod === "telegram" ? "active" : ""} onClick={() => { setAuthMethod("telegram"); setAuthMessage(""); }}><Send size={14}/> Telegram</button>
+      </div>
+      {authMethod === "email" ? <>
+        <form className="auth-form" onSubmit={submitAuth}>
+          {authMode !== "forgot" && <label className="auth-field"><span>Email</span><div><Mail size={17}/><input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email"/></div></label>}
+          {authMode === "forgot" && <label className="auth-field"><span>Email</span><div><Mail size={17}/><input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email"/></div></label>}
+          {authMode !== "forgot" && <label className="auth-field"><span>Пароль</span><div><Lock size={17}/><input type={showPassword ? "text" : "password"} value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="Не менее 6 символов" minLength={6} required autoComplete={authMode === "register" ? "new-password" : "current-password"}/><button type="button" className="password-toggle" aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>}
+          <button className="auth-submit" type="submit">{authMode === "register" ? "Зарегистрироваться" : authMode === "forgot" ? "Восстановить пароль" : "Войти"}</button>
+        </form>
+        {authMessage && <p className="auth-message">{authMessage}</p>}
+        {authMode === "login" && <button className="auth-link forgot-link" onClick={() => { setAuthMode("forgot"); setAuthMessage(""); }}>Забыли пароль?</button>}
+        <div className="auth-bottom">{authMode === "register" ? <>Уже есть аккаунт? <button onClick={() => setAuthMode("login")}>Войти</button></> : authMode === "forgot" ? <button onClick={() => { setAuthMode("login"); setAuthMessage(""); }}><ArrowLeft size={14}/> Назад ко входу</button> : <>Нет аккаунта? <button onClick={() => { setAuthMode("register"); setAuthMessage(""); }}>Зарегистрироваться</button></>}</div>
+        <p className="auth-demo-note">Локальный демо-вход. Проверка аккаунта через сервер пока не подключена.</p>
+      </> : <div className="telegram-panel"><div className="telegram-icon"><Send size={24}/></div><strong>Вход через Telegram</strong><p>Подключение Telegram-авторизации появится после настройки бота и сервера.</p><button onClick={() => setAuthMethod("email")}>Вернуться к Email</button></div>}
+    </section>
+    <span className="auth-copyright">© 2026 NEXMUSIC · Музыка без границ</span>
+  </main>;
 
   return <div className="app-shell">
     <audio ref={audioRef} onTimeUpdate={e => setProgress(e.currentTarget.currentTime)} onLoadedMetadata={e => setDuration(e.currentTarget.duration)} onEnded={() => repeat ? (audioRef.current && (audioRef.current.currentTime = 0, void audioRef.current.play())) : nextTrack()} />
@@ -101,7 +152,7 @@ export default function App() {
     </aside>
     {mobileMenu && <button className="scrim" aria-label="Закрыть меню" onClick={() => setMobileMenu(false)}/>}
     <main className="main-area">
-      <header className="topbar"><button className="mobile-menu icon-btn" onClick={() => setMobileMenu(true)}><Menu/></button><div className="breadcrumbs">NEXMUSIC <span>/</span> {active}</div><div className="top-actions"><div className="search-box"><Search size={17}/><input value={query} onChange={e => { setQuery(e.target.value); if (e.target.value) setActive("Поиск"); }} placeholder="Треки, исполнители, альбомы..."/><kbd>⌘ K</kbd></div><div className="avatar">N</div></div></header>
+      <header className="topbar"><button className="mobile-menu icon-btn" onClick={() => setMobileMenu(true)}><Menu/></button><div className="breadcrumbs">NEXMUSIC <span>/</span> {active}</div><div className="top-actions"><div className="search-box"><Search size={17}/><input value={query} onChange={e => { setQuery(e.target.value); if (e.target.value) setActive("Поиск"); }} placeholder="Треки, исполнители, альбомы..."/><kbd>⌘ K</kbd></div><button className="avatar" title={"Выйти (" + session + ")"} onClick={() => { localStorage.removeItem("nexmusic.session.email"); setSession(""); setAuthMode("login"); setAuthPassword(""); }}>N</button></div></header>
       <div className="content">
         {active === "Главная" && <>
           <section className="hero glass"><div className="hero-glow"/><div className="hero-copy"><div className="eyebrow"><span className="pulse"/> ТВОЁ МУЗЫКАЛЬНОЕ ПРОСТРАНСТВО</div><h1>Звук, который<br/><span>твой.</span></h1><p>Открой любимые треки. Создавай настроение. Слушай по-своему.</p><button className="primary-btn" onClick={() => { const local = tracks.find(t => t.src); if (local) playTrack(local); else setActive("Медиатека"); }}><Play size={17} fill="currentColor"/> Открыть медиатеку</button></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-disc"><div className="disc-center"><AudioLines size={36}/></div></div><div className="floating-chip chip-one"><AudioLines size={15}/> PURE SOUND</div><div className="floating-chip chip-two"><span className="equalizer"><i/><i/><i/><i/></span> NOW PLAYING</div></div></section>
