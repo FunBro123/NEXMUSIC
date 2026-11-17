@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
@@ -94,7 +94,7 @@ export default function App() {
   };
   const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
-  const submitAuth = (event: React.FormEvent<HTMLFormElement>) => {
+  const submitAuth = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthMessage("");
     if (authMode === "forgot") {
