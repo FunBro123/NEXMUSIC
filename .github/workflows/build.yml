@@ -26,11 +26,15 @@ jobs:
           if-no-files-found: error
 
   android:
-    name: Build Android APK
+    name: Build Signed Android APK
     runs-on: ubuntu-latest
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,25 +55,66 @@ jobs:
       - run: npm run build
       - run: npx cap add android
       - run: npx cap sync android
-      - name: Build debug APK
+      - name: Check signing configuration
+        id: signing
+        shell: bash
+        run: |
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Android signing secrets are not configured. APK publishing is skipped; add the four repository secrets to enable signed updates."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Decode persistent Android signing key
+        if: steps.signing.outputs.configured == 'true'
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/nexmusic-release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/nexmusic-release.jks" >> "$GITHUB_ENV"
+      - name: Configure release signing and version code
+        if: steps.signing.outputs.configured == 'true'
         working-directory: android
-        run: chmod +x gradlew && ./gradlew assembleDebug
-      - name: Upload APK artifact
+        run: |
+          cat >> app/build.gradle <<'GRADLE'
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
+          sed -i -E "s/versionCode[[:space:]]+[0-9]+/versionCode $((GITHUB_RUN_NUMBER + 1))/" app/build.gradle
+      - name: Build signed release APK
+        if: steps.signing.outputs.configured == 'true'
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleRelease
+      - name: Upload signed APK artifact
+        if: steps.signing.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: NEXMUSIC-Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
-      - name: Publish APK to rolling GitHub Release
+      - name: Publish signed APK to rolling GitHub Release
+        if: steps.signing.outputs.configured == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: NEXMUSIC — Последняя версия
           body: |
-            Актуальная сборка NEXMUSIC для Android.
+            Актуальная подписанная сборка NEXMUSIC для Android.
 
-            Этот релиз обновляется автоматически после каждой успешной сборки.
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+            Обновления устанавливаются поверх предыдущей версии при сохранении приложения.
+          files: android/app/build/outputs/apk/release/app-release.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true
