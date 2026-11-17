@@ -1,9 +1,10 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
   Clock3, Shuffle, Repeat, Upload, Headphones, PanelLeftClose, Menu, X,
-  Sparkles, Eye, EyeOff, Send, ArrowLeft
+  Sparkles, Eye, EyeOff, Send, ArrowLeft, Mail, LockKeyhole
 } from "lucide-react";
 
 type Track = { id: number; title: string; artist: string; album: string; duration: string; cover: string; src?: string };
@@ -126,7 +127,7 @@ export default function App() {
         <form className="auth-form" onSubmit={submitAuth}>
           {authMode !== "forgot" && <label className="auth-field"><span>Email</span><div><Mail size={17}/><input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email"/></div></label>}
           {authMode === "forgot" && <label className="auth-field"><span>Email</span><div><Mail size={17}/><input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email"/></div></label>}
-          {authMode !== "forgot" && <label className="auth-field"><span>Пароль</span><div><Lock size={17}/><input type={showPassword ? "text" : "password"} value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="Не менее 6 символов" minLength={6} required autoComplete={authMode === "register" ? "new-password" : "current-password"}/><button type="button" className="password-toggle" aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>}
+          {authMode !== "forgot" && <label className="auth-field"><span>Пароль</span><div><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder="Не менее 6 символов" minLength={6} required autoComplete={authMode === "register" ? "new-password" : "current-password"}/><button type="button" className="password-toggle" aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>}
           <button className="auth-submit" type="submit">{authMode === "register" ? "Зарегистрироваться" : authMode === "forgot" ? "Восстановить пароль" : "Войти"}</button>
         </form>
         {authMessage && <p className="auth-message">{authMessage}</p>}
