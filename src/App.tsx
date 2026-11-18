@@ -203,13 +203,32 @@ export default function App() {
     const candidate = (srcMatch?.[1] || raw).replace(/&amp;/g, "&");
     try {
       const url = new URL(candidate);
-      const parts = url.hash.slice(1).split("/");
-      if (url.protocol !== "https:" || url.hostname !== "music.yandex.ru" || url.pathname !== "/iframe/" || !["track", "album"].includes(parts[0]) || !parts[1] || !/^\d+$/.test(parts[1]) || (parts[2] !== undefined && !/^\d+$/.test(parts[2]))) throw new Error("unsupported");
-      setYandexEmbedUrl(url.toString());
-      localStorage.setItem("nexmusic.yandexEmbedUrl.v1", url.toString());
+      if (url.protocol !== "https:" || !["music.yandex.ru", "www.music.yandex.ru"].includes(url.hostname)) throw new Error("host");
+      let embedUrl = "";
+      if (url.pathname === "/iframe/") {
+        const parts = url.hash.slice(1).split("/");
+        if (!["track", "album"].includes(parts[0]) || !parts[1] || !/^\d+$/.test(parts[1]) || (parts[2] !== undefined && !/^\d+$/.test(parts[2]))) throw new Error("iframe");
+        embedUrl = url.toString();
+      } else {
+        const parts = url.pathname.split("/").filter(Boolean);
+        const albumIndex = parts.indexOf("album");
+        const trackIndex = parts.indexOf("track");
+        if (albumIndex >= 0 && /^\d+$/.test(parts[albumIndex + 1] || "")) {
+          const albumId = parts[albumIndex + 1];
+          if (trackIndex >= 0 && /^\d+$/.test(parts[trackIndex + 1] || "")) {
+            embedUrl = "https://music.yandex.ru/iframe/#track/" + parts[trackIndex + 1] + "/" + albumId;
+          } else {
+            embedUrl = "https://music.yandex.ru/iframe/#album/" + albumId;
+          }
+        } else {
+          throw new Error("share-link");
+        }
+      }
+      setYandexEmbedUrl(embedUrl);
+      localStorage.setItem("nexmusic.yandexEmbedUrl.v1", embedUrl);
       setYandexEmbedError("");
     } catch {
-      setYandexEmbedError("Не удалось распознать ссылку. Вставь src из HTML-кода Яндекс Музыки — адрес должен начинаться с https://music.yandex.ru/iframe/.");
+      setYandexEmbedError("Не удалось распознать ссылку. Нужна ссылка Яндекс Музыки на трек вида music.yandex.ru/album/ID/track/ID или ссылка на альбом.");
     }
   };
   const clearYandexEmbed = () => {
@@ -337,15 +356,15 @@ export default function App() {
           <div className="service-import-card glass yandex-embed-card">
             <div className="eyebrow muted">ВСТРОЕННЫЙ ПЛЕЕР · ЯНДЕКС МУЗЫКА</div>
             <h3>Слушать прямо в NEXMUSIC</h3>
-            <p>Открой меню нужного трека в Яндекс Музыке, выбери «Поделиться → HTML-код» и вставь сюда весь код или значение src. NEXMUSIC загрузит официальный встроенный плеер.</p>
-            <label className="metadata-field"><span>Ссылка или HTML-код вставки</span><textarea className="service-import-textarea" value={yandexEmbedInput} onChange={event => { setYandexEmbedInput(event.target.value); setYandexEmbedError(""); }} placeholder={'<iframe src="https://music.yandex.ru/iframe/#track/71263/419460" ...></iframe>'} rows={3}/></label>
+            <p>Вставь обычную ссылку «Поделиться» на трек или альбом из Яндекс Музыки. NEXMUSIC преобразует её в официальный встроенный плеер — скачивать аудиофайл не нужно.</p>
+            <label className="metadata-field"><span>Ссылка или HTML-код вставки</span><textarea className="service-import-textarea" value={yandexEmbedInput} onChange={event => { setYandexEmbedInput(event.target.value); setYandexEmbedError(""); }} placeholder="https://music.yandex.ru/album/419460/track/71263" rows={3}/></label>
             <div className="online-provider-actions">
               <button className="primary-btn compact" onClick={addYandexEmbed}>Добавить в плеер</button>
               {yandexEmbedUrl && <button className="text-btn" onClick={clearYandexEmbed}>Удалить трек</button>}
             </div>
             {yandexEmbedError && <p className="embed-error" role="alert">{yandexEmbedError}</p>}
             {yandexEmbedUrl ? <div className="yandex-embed-frame"><iframe src={yandexEmbedUrl} title="Официальный плеер Яндекс Музыки" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin"/></div> : <div className="embed-empty"><Music2 size={24}/><span>Добавь ссылку на трек, чтобы открыть плеер здесь</span></div>}
-            <p className="metadata-note">Плеер предоставляется Яндекс Музыкой. Доступность воспроизведения и ограничения зависят от правил сервиса и твоего аккаунта. Встроенное воспроизведение Zvuk пока не подключено.</p>
+            <p className="metadata-note">Это официальный плеер Яндекс Музыки для отдельного трека или альбома, а не полный каталог NEXMUSIC. Доступность зависит от Яндекса, региона и аккаунта. Встроенный каталог Zvuk пока недоступен.</p>
           </div>
           <div className="service-import-card glass">
             <div className="eyebrow muted">ШАГ 1 · ПОДГОТОВЬ СПИСОК</div><h3>Импорт плейлиста</h3>
