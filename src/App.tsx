@@ -41,7 +41,9 @@ export default function App() {
   const [favorites, setFavorites] = useState<number[]>(() => readSaved<number[]>("nexmusic.favorites", []));
   const [playCounts, setPlayCounts] = useState<Record<string, number>>(() => readSaved<Record<string, number>>("nexmusic.playCounts.v1", {}));
   const [playlists, setPlaylists] = useState<Playlist[]>(() => readSaved<Playlist[]>("nexmusic.playlists.v1", []));
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);\n  const [editingTrack, setEditingTrack] = useState<Track | null>(null);\n  const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
   const [playlistImportName, setPlaylistImportName] = useState("");
   const [playlistImportText, setPlaylistImportText] = useState("");
@@ -57,7 +59,11 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem("nexmusic.favorites", JSON.stringify(favorites)); }, [favorites]);
   useEffect(() => { localStorage.setItem("nexmusic.playCounts.v1", JSON.stringify(playCounts)); }, [playCounts]);
-  useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);\n  useEffect(() => {\n    const saved = readSaved<Record<string, TrackMetadata>>("nexmusic.trackMetadata.v1", {});\n    setTracks(old => old.map(track => saved[String(track.id)] ? { ...track, ...saved[String(track.id)] } : track));\n  }, []);
+  useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);
+  useEffect(() => {
+    const saved = readSaved<Record<string, TrackMetadata>>("nexmusic.trackMetadata.v1", {});
+    setTracks(old => old.map(track => saved[String(track.id)] ? { ...track, ...saved[String(track.id)] } : track));
+  }, []);
   useEffect(() => {
     let cancelled = false;
     loadAudioFiles().then(saved => {
@@ -166,7 +172,7 @@ export default function App() {
     }
   };
   const importPlaylistList = () => {
-    const lines = playlistImportText.split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);
+    const lines = playlistImportText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
     if (!lines.length) { window.alert("Вставь список треков для импорта."); return; }
     const normalize = (value: string) => value.toLocaleLowerCase("ru").replace(/\\([^)]*\\)/g, "").replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
     const matchedIds: number[] = [];
