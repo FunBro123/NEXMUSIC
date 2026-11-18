@@ -199,11 +199,11 @@ export default function App() {
   };
   const addYandexEmbed = () => {
     const raw = yandexEmbedInput.trim();
-    const srcMatch = raw.match(/src\\s*=\\s*["']([^"']+)["']/i);
+    const srcMatch = raw.match(/src\s*=\s*["']([^"']+)["']/i);
     const candidate = (srcMatch?.[1] || raw).replace(/&amp;/g, "&");
     try {
       const url = new URL(candidate);
-      if (url.protocol !== "https:" || url.hostname !== "music.yandex.ru" || url.pathname !== "/iframe/" || !/^#(?:track|album)\\/[0-9]+(?:\\/[0-9]+)?/.test(url.hash)) throw new Error("unsupported");
+      if (url.protocol !== "https:" || url.hostname !== "music.yandex.ru" || url.pathname !== "/iframe/" || !/^#(?:track|album)\/[0-9]+(?:\/[0-9]+)?/.test(url.hash)) throw new Error("unsupported");
       setYandexEmbedUrl(url.toString());
       localStorage.setItem("nexmusic.yandexEmbedUrl.v1", url.toString());
       setYandexEmbedError("");
