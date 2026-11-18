@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { loadAudioFiles, saveAudioFiles, updateAudioMetadata } from "./libraryStorage";
 import {
-  AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
+  AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause, UserCircle,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
   Clock3, Shuffle, Repeat, Upload, Headphones, PanelLeftClose, Menu, X,
   Sparkles, Eye, EyeOff, Send, ArrowLeft, Mail, LockKeyhole, Trash2, Pencil
@@ -39,6 +39,7 @@ export default function App() {
   const [active, setActive] = useState("Главная");
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState<number[]>(() => readSaved<number[]>("nexmusic.favorites", []));
+  const [playCounts, setPlayCounts] = useState<Record<string, number>>(() => readSaved<Record<string, number>>("nexmusic.playCounts.v1", {}));
   const [playlists, setPlaylists] = useState<Playlist[]>(() => readSaved<Playlist[]>("nexmusic.playlists.v1", []));
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);\n  const [editingTrack, setEditingTrack] = useState<Track | null>(null);\n  const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
@@ -55,6 +56,7 @@ export default function App() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { localStorage.setItem("nexmusic.favorites", JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem("nexmusic.playCounts.v1", JSON.stringify(playCounts)); }, [playCounts]);
   useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);\n  useEffect(() => {\n    const saved = readSaved<Record<string, TrackMetadata>>("nexmusic.trackMetadata.v1", {});\n    setTracks(old => old.map(track => saved[String(track.id)] ? { ...track, ...saved[String(track.id)] } : track));\n  }, []);
   useEffect(() => {
     let cancelled = false;
@@ -84,7 +86,7 @@ export default function App() {
 
   const visibleTracks = useMemo(() => {
     let list = tracks;
-    if (active === "Избранное") list = list.filter(t => favorites.includes(t.id));
+    if (active === "Избранное" || active === "Моё любимое") list = list.filter(t => favorites.includes(t.id));
     if (query.trim()) list = list.filter(t => (t.title + t.artist + t.album).toLowerCase().includes(query.toLowerCase()));
     return list;
   }, [tracks, active, favorites, query]);
@@ -112,7 +114,7 @@ export default function App() {
       ...item, trackIds: item.trackIds.includes(trackId) ? item.trackIds.filter(id => id !== trackId) : [...item.trackIds, trackId]
     }));
   };
-  const playTrack = (track: Track) => { setCurrent(track); setPlaying(Boolean(track.src)); };
+  const playTrack = (track: Track) => { setCurrent(track); setPlaying(Boolean(track.src)); setPlayCounts(old => ({ ...old, [String(track.id)]: (old[String(track.id)] || 0) + 1 })); };
   const openTrackEditor = (track: Track) => {
     setEditingTrack(track);
     setMetadataDraft({ title: track.title, artist: track.artist, album: track.album });
@@ -185,7 +187,7 @@ export default function App() {
     setPlaylistImportResult({ matched: playlist.trackIds.length, unmatched });
     setPlaylistImportText("");
   };
-  const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }];
+  const nav = [{ label: "Главная", icon: Home }, { label: "Моя волна", icon: Sparkles }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Моё любимое", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }, { label: "Профиль", icon: UserCircle }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
   const submitAuth = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -249,9 +251,9 @@ export default function App() {
       <div className="content">
         {active === "Главная" && <>
           <section className="hero glass"><div className="hero-glow"/><div className="hero-copy"><div className="eyebrow"><span className="pulse"/> ТВОЁ МУЗЫКАЛЬНОЕ ПРОСТРАНСТВО</div><h1>Звук, который<br/><span>твой.</span></h1><p>Открой любимые треки. Создавай настроение. Слушай по-своему.</p><button className="primary-btn" onClick={() => { const local = tracks.find(t => t.src); if (local) playTrack(local); else setActive("Медиатека"); }}><Play size={17} fill="currentColor"/> Открыть медиатеку</button></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-disc"><div className="disc-center"><AudioLines size={36}/></div></div><div className="floating-chip chip-one"><AudioLines size={15}/> PURE SOUND</div><div className="floating-chip chip-two"><span className="equalizer"><i/><i/><i/><i/></span> NOW PLAYING</div></div></section>
-          <section className="section"><div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Быстрый доступ</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Вся медиатека <span>→</span></button></div><div className="quick-grid"><button className="quick-card quick-fav" onClick={() => setActive("Избранное")}><div className="quick-icon"><Heart fill="currentColor"/></div><div><strong>Избранное</strong><span>{favorites.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-library" onClick={() => setActive("Медиатека")}><div className="quick-icon"><Disc3/></div><div><strong>Моя музыка</strong><span>{tracks.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-playlist" onClick={() => fileRef.current?.click()}><div className="quick-icon"><Plus/></div><div><strong>Добавить треки</strong><span>С устройства</span></div><Upload size={17}/></button></div></section>
+          <section className="section wave-feature-section"><button className="wave-feature" onClick={() => setActive("Моя волна")}><div className="wave-feature-art"><span/><span/><span/><span/><span/><span/><span/></div><div className="wave-feature-copy"><div className="eyebrow">ПЕРСОНАЛЬНАЯ ПОДБОРКА</div><h2>Моя волна</h2><p>Музыка из твоей медиатеки в случайном потоке</p><strong>Запустить волну <Play size={15} fill="currentColor"/></strong></div></button></section><section className="section"><div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Быстрый доступ</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Вся медиатека <span>→</span></button></div><div className="quick-grid"><button className="quick-card quick-fav" onClick={() => setActive("Избранное")}><div className="quick-icon"><Heart fill="currentColor"/></div><div><strong>Избранное</strong><span>{favorites.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-library" onClick={() => setActive("Медиатека")}><div className="quick-icon"><Disc3/></div><div><strong>Моя музыка</strong><span>{tracks.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-playlist" onClick={() => fileRef.current?.click()}><div className="quick-icon"><Plus/></div><div><strong>Добавить треки</strong><span>С устройства</span></div><Upload size={17}/></button></div></section>
         </>}
-        {(active === "Медиатека" || active === "Избранное" || active === "Поиск") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
+        {(active === "Медиатека" || active === "Избранное" || active === "Моё любимое" || active === "Поиск") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
           {visibleTracks.length ? <div className="track-table"><div className="track-head"><span>#</span><span>НАЗВАНИЕ</span><span>АЛЬБОМ</span><span><Clock3 size={14}/></span><span/></div>{visibleTracks.map((track, i) => <div className={current.id === track.id ? "track-row active-track" : "track-row"} key={track.id} onDoubleClick={() => playTrack(track)}><span className="track-number">{current.id === track.id && playing ? <AudioLines size={16}/> : String(i + 1).padStart(2, "0")}</span><button className="track-info" onClick={() => playTrack(track)}><img src={track.cover} alt=""/><span><strong>{track.title}</strong><small>{track.artist}</small></span></button><span className="track-album">{track.album}</span><span className="track-duration">{track.duration}</span><div className="track-row-actions"><button className="control-btn" onClick={() => openTrackEditor(track)} aria-label="Изменить теги" title="Изменить название, исполнителя и альбом"><Pencil size={15}/></button><button className={favorites.includes(track.id) ? "heart-btn liked" : "heart-btn"} onClick={() => toggleFavorite(track.id)} aria-label="В избранное"><Heart size={17} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button></div></div>)}</div> : <div className="empty-state"><Music2 size={34}/><strong>Здесь пока тихо</strong><span>Добавь аудиофайлы со своего устройства.</span><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Plus size={16}/> Добавить музыку</button></div>}
         </section>}
         {active === "Плейлисты" && <section className="section playlist-section">
@@ -300,6 +302,9 @@ export default function App() {
           </section>
         </div>}
         <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => { void importFiles(e.target.files); e.currentTarget.value = ""; }}/>
+        {active === "Главная" && <section className="section"><div className="section-heading"><div><div className="eyebrow muted">ЧАСТО СЛУШАЮТ У ТЕБЯ</div><h2>Популярные треки</h2><p className="section-sub">По твоей истории прослушивания на этом устройстве</p></div></div><div className="album-grid">{[...tracks].sort((a,b)=>(playCounts[String(b.id)]||0)-(playCounts[String(a.id)]||0)).slice(0,4).map(t=><button className="album-card" key={t.id} onClick={()=>playTrack(t)}><div className="album-cover"><img src={t.cover} alt=""/><span className="album-play"><Play fill="currentColor" size={20}/></span></div><strong>{t.title}</strong><span>{t.artist}</span></button>)}</div></section>}
+        {active === "Моя волна" && <section className="section wave-page"><div className="wave-page-hero"><div className="wave-feature-art large"><span/><span/><span/><span/><span/><span/><span/></div><div><div className="eyebrow">ТВОЙ ПЕРСОНАЛЬНЫЙ ПОТОК</div><h2>Моя волна</h2><p>Случайная последовательность треков из твоей медиатеки и избранного. Всё работает локально, без подписки.</p><button className="primary-btn compact" onClick={()=>{const pool=tracks.filter(t=>t.src || favorites.includes(t.id));if(pool.length){const start=pool[Math.floor(Math.random()*pool.length)];playTrack(start);setShuffle(true);}else{window.alert("Добавь свои аудиофайлы или отметь треки в избранном.");}}}><Play size={16} fill="currentColor"/> Запустить волну</button></div></div><div className="section-heading"><div><div className="eyebrow muted">ТВОЯ МУЗЫКА</div><h3>Подборка для тебя</h3></div></div><div className="track-table">{tracks.slice(0,8).map((t,i)=><div className="track-row" key={t.id}><span className="track-number">{i+1}</span><button className="track-info" onClick={()=>playTrack(t)}><img src={t.cover} alt=""/><span><strong>{t.title}</strong><small>{t.artist}</small></span></button><span className="track-album">{t.album}</span><span className="track-duration">{t.duration}</span><button className="heart-btn" onClick={()=>toggleFavorite(t.id)}><Heart size={17} fill={favorites.includes(t.id)?"currentColor":"none"}/></button></div>)}</div></section>}
+        {active === "Профиль" && <section className="section profile-section"><div className="profile-card"><div className="profile-avatar"><UserCircle size={42}/></div><div><div className="eyebrow muted">ТВОЙ АККАУНТ NEXMUSIC</div><h2>{session}</h2><p className="section-sub">Локальный профиль на этом устройстве</p></div><button className="text-btn" onClick={()=>{localStorage.removeItem("nexmusic.session.email");setSession("");}}>Выйти</button></div><div className="profile-stats"><div><strong>{tracks.length}</strong><span>Треков</span></div><div><strong>{favorites.length}</strong><span>Любимых</span></div><div><strong>{playlists.length}</strong><span>Плейлистов</span></div></div><div className="profile-note"><strong>Бесплатный режим NEXMUSIC</strong><p>Локальная музыка, избранное, плейлисты и история прослушивания доступны без оплаты. Данные пока хранятся на этом устройстве.</p></div></section>}
         {active === "Главная" && <section className="section"><div className="section-heading"><div><div className="eyebrow muted">НАЧНИ С ЭТОГО</div><h2>Недавно добавленное</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Все треки →</button></div><div className="album-grid">{tracks.slice(0, 4).map(t => <button className="album-card" key={t.id} onClick={() => playTrack(t)}><div className="album-cover"><img src={t.cover} alt=""/><span className="album-play"><Play fill="currentColor" size={20}/></span></div><strong>{t.title}</strong><span>{t.artist}</span></button>)}</div></section>}
         <footer>© 2026 NEXMUSIC <span>Сделано для музыки.</span><span className="footer-free">100% FREE</span></footer>
       </div>
