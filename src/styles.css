@@ -138,3 +138,10 @@
 .online-search-card {
   margin-bottom: 20px;
 }
+
+
+.yandex-embed-card { margin-bottom: 22px; }
+.yandex-embed-frame { width: 100%; overflow: hidden; border: 1px solid rgba(195,174,255,.16); border-radius: 13px; background: #101116; }
+.yandex-embed-frame iframe { display: block; width: 100%; height: 180px; border: 0; }
+.embed-empty { min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 1px dashed rgba(255,255,255,.14); border-radius: 12px; color: #858796; font-size: 11px; text-align: center; }
+.embed-error { color: #ff9eaa !important; font-size: 11px !important; }
