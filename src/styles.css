@@ -82,4 +82,4 @@
 .metadata-field input:focus{border-color:#b49aff99;box-shadow:0 0 0 3px #b49aff15}
 .metadata-note{margin:17px 0;color:#858796;font-size:10px;line-height:1.6}
 .metadata-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:20px}
-@media(max-width:760px){.track-row-actions .control-btn{display:none}.metadata-dialog{padding:21px}}
+@media(max-width:760px){.track-head,.track-row{grid-template-columns:25px minmax(110px,1fr) 68px}.track-row-actions{gap:0}.track-row-actions .control-btn{display:grid;width:25px;padding:4px}.track-row-actions .heart-btn{width:25px;padding:4px}.metadata-dialog{padding:21px}}
