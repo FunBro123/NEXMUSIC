@@ -41,6 +41,10 @@ export default function App() {
   const [favorites, setFavorites] = useState<number[]>(() => readSaved<number[]>("nexmusic.favorites", []));
   const [playlists, setPlaylists] = useState<Playlist[]>(() => readSaved<Playlist[]>("nexmusic.playlists.v1", []));
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);\n  const [editingTrack, setEditingTrack] = useState<Track | null>(null);\n  const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
+  const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
+  const [playlistImportName, setPlaylistImportName] = useState("");
+  const [playlistImportText, setPlaylistImportText] = useState("");
+  const [playlistImportResult, setPlaylistImportResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
   const [volume, setVolume] = useState(72);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -159,7 +163,29 @@ export default function App() {
       window.alert("Не удалось сохранить музыку на устройстве. Проверь свободное место и разрешения браузера.");
     }
   };
-  const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }];
+  const importPlaylistList = () => {
+    const lines = playlistImportText.split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);
+    if (!lines.length) { window.alert("Вставь список треков для импорта."); return; }
+    const normalize = (value: string) => value.toLocaleLowerCase("ru").replace(/\\([^)]*\\)/g, "").replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+    const matchedIds: number[] = [];
+    const unmatched: string[] = [];
+    for (const line of lines) {
+      const parts = line.split(/\\s+[—–-]\\s+/);
+      const artist = parts.length > 1 ? parts[0] : "";
+      const title = parts.length > 1 ? parts.slice(1).join(" ") : parts[0];
+      const wantedTitle = normalize(title);
+      const wantedArtist = normalize(artist);
+      const found = tracks.find(track => normalize(track.title) === wantedTitle && (!wantedArtist || normalize(track.artist) === wantedArtist));
+      if (found) matchedIds.push(found.id);
+      else unmatched.push(line);
+    }
+    const playlist: Playlist = { id: Date.now(), name: (playlistImportName.trim() || "Импорт из " + playlistImportSource).slice(0, 40), trackIds: [...new Set(matchedIds)] };
+    setPlaylists(old => [...old, playlist]);
+    setSelectedPlaylistId(playlist.id);
+    setPlaylistImportResult({ matched: playlist.trackIds.length, unmatched });
+    setPlaylistImportText("");
+  };
+  const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
   const submitAuth = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -246,6 +272,22 @@ export default function App() {
               </div>;
             })}
           </>}
+        </section>}
+        {active === "Сервисы" && <section className="section services-section">
+          <div className="section-heading"><div><div className="eyebrow muted">МУЗЫКАЛЬНЫЕ ПЛАТФОРМЫ</div><h2>Импорт из сервисов</h2><p className="section-sub">Переноси списки любимых треков в свою медиатеку NEXMUSIC.</p></div></div>
+          <div className="service-provider-grid">
+            <article className={playlistImportSource === "Яндекс Музыка" ? "service-provider selected" : "service-provider"}><div className="service-provider-logo yandex-logo">Я</div><div><strong>Яндекс Музыка</strong><span>Источник плейлиста</span></div><button className="text-btn" onClick={() => { setPlaylistImportSource("Яндекс Музыка"); setPlaylistImportResult(null); }}>Выбрать</button></article>
+            <article className={playlistImportSource === "Звук" ? "service-provider selected" : "service-provider"}><div className="service-provider-logo zvuk-logo">З</div><div><strong>Звук</strong><span>Источник плейлиста</span></div><button className="text-btn" onClick={() => { setPlaylistImportSource("Звук"); setPlaylistImportResult(null); }}>Выбрать</button></article>
+          </div>
+          <div className="service-import-card glass">
+            <div className="eyebrow muted">ШАГ 1 · ПОДГОТОВЬ СПИСОК</div><h3>Импорт плейлиста</h3>
+            <p>Выбран источник: <b>{playlistImportSource}</b>. Вставь сюда список треков в формате «Исполнитель — Название», по одному треку на строку. Сейчас NEXMUSIC сопоставляет список с музыкой, уже добавленной на это устройство.</p>
+            <label className="metadata-field"><span>Название нового плейлиста</span><input value={playlistImportName} maxLength={40} onChange={event => setPlaylistImportName(event.target.value)} placeholder={"Например, Избранное из " + playlistImportSource}/></label>
+            <label className="metadata-field"><span>Список треков</span><textarea className="service-import-textarea" value={playlistImportText} onChange={event => { setPlaylistImportText(event.target.value); setPlaylistImportResult(null); }} placeholder={"Miyagi — Captain\nМоя Мишель — Зима в сердце\n..."} rows={7}/></label>
+            <button className="primary-btn compact" onClick={importPlaylistList}><ListMusic size={16}/> Создать плейлист</button>
+            <p className="metadata-note">Важно: это пока импорт списка и поиск совпадений в локальной медиатеке. Прямое подключение аккаунтов и поиск по онлайн-каталогам Яндекс Музыки и Звука ещё не подключены. NEXMUSIC не скачивает и не копирует защищённые аудиозаписи.</p>
+            {playlistImportResult && <div className="service-import-result"><b>Плейлист создан.</b><span>Совпадений в локальной медиатеке: {playlistImportResult.matched}. Не найдено: {playlistImportResult.unmatched.length}.</span>{playlistImportResult.unmatched.length > 0 && <details><summary>Показать ненайденные треки</summary><ul>{playlistImportResult.unmatched.map((line, index) => <li key={index}>{line}</li>)}</ul></details>}</div>}
+          </div>
         </section>}
         {editingTrack && <div className="metadata-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setEditingTrack(null); }}>
           <section className="metadata-dialog" role="dialog" aria-modal="true" aria-labelledby="metadata-title">
