@@ -83,3 +83,26 @@
 .metadata-note{margin:17px 0;color:#858796;font-size:10px;line-height:1.6}
 .metadata-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:20px}
 @media(max-width:760px){.track-head,.track-row{grid-template-columns:25px minmax(110px,1fr) 68px}.track-row-actions{gap:0}.track-row-actions .control-btn{display:grid;width:25px;padding:4px}.track-row-actions .heart-btn{width:25px;padding:4px}.metadata-dialog{padding:21px}}
+
+.service-provider-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+.service-provider{display:flex;align-items:center;gap:13px;padding:17px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);transition:.2s}
+.service-provider.selected{border-color:#a78bfa88;background:rgba(167,139,250,.09)}
+.service-provider>div:nth-child(2){flex:1;min-width:0}
+.service-provider strong,.service-provider span{display:block}
+.service-provider strong{font-size:13px}
+.service-provider span{font-size:10px;color:var(--muted);margin-top:4px}
+.service-provider-logo{width:39px;height:39px;border-radius:12px;display:grid;place-items:center;font-size:21px;font-weight:800}
+.yandex-logo{background:#ffdb42;color:#171717}
+.zvuk-logo{background:#a78bfa;color:#1a1427}
+.service-import-card{padding:25px;margin-top:22px}
+.service-import-card h3{font:700 20px Manrope,sans-serif;margin:9px 0}
+.service-import-card>p{font-size:12px;line-height:1.7;color:#9a9baa;max-width:760px}
+.service-import-card .metadata-field{margin:18px 0}
+.service-import-textarea{width:100%;resize:vertical;min-height:150px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.22);color:#f4f4f8;padding:12px;outline:none;font:12px/1.7 'DM Sans',sans-serif}
+.service-import-textarea:focus{border-color:#a78bfa88}
+.service-import-result{margin-top:18px;padding:14px;border-radius:12px;background:rgba(105,216,180,.08);border:1px solid rgba(105,216,180,.2);display:grid;gap:7px;font-size:12px}
+.service-import-result span,.service-import-result li{color:#a5a6b3}
+.service-import-result details{margin-top:5px}
+.service-import-result summary{cursor:pointer;color:#c9b8ff}
+.service-import-result ul{padding-left:20px;max-height:180px;overflow:auto}
+@media(max-width:700px){.service-provider-grid{grid-template-columns:1fr}.service-import-card{padding:18px}.service-provider{padding:13px}}
