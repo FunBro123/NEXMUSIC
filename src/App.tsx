@@ -203,7 +203,8 @@ export default function App() {
     const candidate = (srcMatch?.[1] || raw).replace(/&amp;/g, "&");
     try {
       const url = new URL(candidate);
-      if (url.protocol !== "https:" || url.hostname !== "music.yandex.ru" || url.pathname !== "/iframe/" || !/^#(?:track|album)\/[0-9]+(?:\/[0-9]+)?/.test(url.hash)) throw new Error("unsupported");
+      const parts = url.hash.slice(1).split("/");
+      if (url.protocol !== "https:" || url.hostname !== "music.yandex.ru" || url.pathname !== "/iframe/" || !["track", "album"].includes(parts[0]) || !parts[1] || !/^\d+$/.test(parts[1]) || (parts[2] !== undefined && !/^\d+$/.test(parts[2]))) throw new Error("unsupported");
       setYandexEmbedUrl(url.toString());
       localStorage.setItem("nexmusic.yandexEmbedUrl.v1", url.toString());
       setYandexEmbedError("");
