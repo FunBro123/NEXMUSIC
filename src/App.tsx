@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { loadAudioFiles, saveAudioFiles } from "./libraryStorage";
+import { loadAudioFiles, saveAudioFiles, updateAudioMetadata } from "./libraryStorage";
 import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
@@ -10,6 +10,7 @@ import {
 
 type Track = { id: number; title: string; artist: string; album: string; duration: string; cover: string; src?: string };
 type Playlist = { id: number; name: string; trackIds: number[] };
+type TrackMetadata = { title: string; artist: string; album: string };
 
 const demoTracks: Track[] = [
   { id: 1, title: "Midnight City", artist: "M83", album: "Hurry Up, We're Dreaming", duration: "4:03", cover: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85" },
@@ -39,7 +40,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState<number[]>(() => readSaved<number[]>("nexmusic.favorites", []));
   const [playlists, setPlaylists] = useState<Playlist[]>(() => readSaved<Playlist[]>("nexmusic.playlists.v1", []));
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);\n  const [editingTrack, setEditingTrack] = useState<Track | null>(null);\n  const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [volume, setVolume] = useState(72);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -50,7 +51,7 @@ export default function App() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { localStorage.setItem("nexmusic.favorites", JSON.stringify(favorites)); }, [favorites]);
-  useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);
+  useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);\n  useEffect(() => {\n    const saved = readSaved<Record<string, TrackMetadata>>("nexmusic.trackMetadata.v1", {});\n    setTracks(old => old.map(track => saved[String(track.id)] ? { ...track, ...saved[String(track.id)] } : track));\n  }, []);
   useEffect(() => {
     let cancelled = false;
     loadAudioFiles().then(saved => {
@@ -108,6 +109,33 @@ export default function App() {
     }));
   };
   const playTrack = (track: Track) => { setCurrent(track); setPlaying(Boolean(track.src)); };
+  const openTrackEditor = (track: Track) => {
+    setEditingTrack(track);
+    setMetadataDraft({ title: track.title, artist: track.artist, album: track.album });
+  };
+  const saveTrackMetadata = async () => {
+    if (!editingTrack) return;
+    const metadata = {
+      title: metadataDraft.title.trim().slice(0, 120),
+      artist: metadataDraft.artist.trim().slice(0, 120),
+      album: metadataDraft.album.trim().slice(0, 120)
+    };
+    if (!metadata.title) {
+      window.alert("Укажи название трека.");
+      return;
+    }
+    try {
+      const saved = readSaved<Record<string, TrackMetadata>>("nexmusic.trackMetadata.v1", {});
+      localStorage.setItem("nexmusic.trackMetadata.v1", JSON.stringify({ ...saved, [String(editingTrack.id)]: metadata }));
+      await updateAudioMetadata(editingTrack.id, metadata);
+      setTracks(old => old.map(track => track.id === editingTrack.id ? { ...track, ...metadata } : track));
+      setCurrent(old => old.id === editingTrack.id ? { ...old, ...metadata } : old);
+      setEditingTrack(null);
+    } catch (error) {
+      console.error("NEXMUSIC metadata save:", error);
+      window.alert("Не удалось сохранить изменения. Попробуй ещё раз.");
+    }
+  };
   const nextTrack = () => {
     const index = tracks.findIndex(t => t.id === current.id);
     const next = shuffle ? tracks[Math.floor(Math.random() * tracks.length)] : tracks[(index + 1) % tracks.length];
@@ -198,7 +226,7 @@ export default function App() {
           <section className="section"><div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Быстрый доступ</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Вся медиатека <span>→</span></button></div><div className="quick-grid"><button className="quick-card quick-fav" onClick={() => setActive("Избранное")}><div className="quick-icon"><Heart fill="currentColor"/></div><div><strong>Избранное</strong><span>{favorites.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-library" onClick={() => setActive("Медиатека")}><div className="quick-icon"><Disc3/></div><div><strong>Моя музыка</strong><span>{tracks.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-playlist" onClick={() => fileRef.current?.click()}><div className="quick-icon"><Plus/></div><div><strong>Добавить треки</strong><span>С устройства</span></div><Upload size={17}/></button></div></section>
         </>}
         {(active === "Медиатека" || active === "Избранное" || active === "Поиск") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
-          {visibleTracks.length ? <div className="track-table"><div className="track-head"><span>#</span><span>НАЗВАНИЕ</span><span>АЛЬБОМ</span><span><Clock3 size={14}/></span><span/></div>{visibleTracks.map((track, i) => <div className={current.id === track.id ? "track-row active-track" : "track-row"} key={track.id} onDoubleClick={() => playTrack(track)}><span className="track-number">{current.id === track.id && playing ? <AudioLines size={16}/> : String(i + 1).padStart(2, "0")}</span><button className="track-info" onClick={() => playTrack(track)}><img src={track.cover} alt=""/><span><strong>{track.title}</strong><small>{track.artist}</small></span></button><span className="track-album">{track.album}</span><span className="track-duration">{track.duration}</span><button className={favorites.includes(track.id) ? "heart-btn liked" : "heart-btn"} onClick={() => toggleFavorite(track.id)} aria-label="В избранное"><Heart size={17} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button></div>)}</div> : <div className="empty-state"><Music2 size={34}/><strong>Здесь пока тихо</strong><span>Добавь аудиофайлы со своего устройства.</span><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Plus size={16}/> Добавить музыку</button></div>}
+          {visibleTracks.length ? <div className="track-table"><div className="track-head"><span>#</span><span>НАЗВАНИЕ</span><span>АЛЬБОМ</span><span><Clock3 size={14}/></span><span/></div>{visibleTracks.map((track, i) => <div className={current.id === track.id ? "track-row active-track" : "track-row"} key={track.id} onDoubleClick={() => playTrack(track)}><span className="track-number">{current.id === track.id && playing ? <AudioLines size={16}/> : String(i + 1).padStart(2, "0")}</span><button className="track-info" onClick={() => playTrack(track)}><img src={track.cover} alt=""/><span><strong>{track.title}</strong><small>{track.artist}</small></span></button><span className="track-album">{track.album}</span><span className="track-duration">{track.duration}</span><div className="track-row-actions"><button className="control-btn" onClick={() => openTrackEditor(track)} aria-label="Изменить теги" title="Изменить название, исполнителя и альбом"><Pencil size={15}/></button><button className={favorites.includes(track.id) ? "heart-btn liked" : "heart-btn"} onClick={() => toggleFavorite(track.id)} aria-label="В избранное"><Heart size={17} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button></div></div>)}</div> : <div className="empty-state"><Music2 size={34}/><strong>Здесь пока тихо</strong><span>Добавь аудиофайлы со своего устройства.</span><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Plus size={16}/> Добавить музыку</button></div>}
         </section>}
         {active === "Плейлисты" && <section className="section playlist-section">
           <div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Плейлисты</h2><p className="section-sub">{playlists.length} плейлистов · сохраняются на этом устройстве</p></div><button className="primary-btn compact" onClick={createPlaylist}><Plus size={16}/> Создать плейлист</button></div>
@@ -219,6 +247,16 @@ export default function App() {
             })}
           </>}
         </section>}
+        {editingTrack && <div className="metadata-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setEditingTrack(null); }}>
+          <section className="metadata-dialog" role="dialog" aria-modal="true" aria-labelledby="metadata-title">
+            <div className="metadata-dialog-head"><div><div className="eyebrow muted">МЕТАДАННЫЕ АУДИО</div><h2 id="metadata-title">Редактировать трек</h2></div><button className="control-btn" onClick={() => setEditingTrack(null)} aria-label="Закрыть"><X size={18}/></button></div>
+            <label className="metadata-field"><span>Название</span><input autoFocus maxLength={120} value={metadataDraft.title} onChange={event => setMetadataDraft(old => ({ ...old, title: event.target.value }))} placeholder="Название трека"/></label>
+            <label className="metadata-field"><span>Исполнитель</span><input maxLength={120} value={metadataDraft.artist} onChange={event => setMetadataDraft(old => ({ ...old, artist: event.target.value }))} placeholder="Имя исполнителя"/></label>
+            <label className="metadata-field"><span>Альбом</span><input maxLength={120} value={metadataDraft.album} onChange={event => setMetadataDraft(old => ({ ...old, album: event.target.value }))} placeholder="Название альбома"/></label>
+            <p className="metadata-note">Изменения сохраняются в NEXMUSIC на этом устройстве. Сам аудиофайл не перезаписывается.</p>
+            <div className="metadata-actions"><button className="text-btn" onClick={() => setEditingTrack(null)}>Отмена</button><button className="primary-btn compact" onClick={() => void saveTrackMetadata()}>Сохранить</button></div>
+          </section>
+        </div>}
         <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => { void importFiles(e.target.files); e.currentTarget.value = ""; }}/>
         {active === "Главная" && <section className="section"><div className="section-heading"><div><div className="eyebrow muted">НАЧНИ С ЭТОГО</div><h2>Недавно добавленное</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Все треки →</button></div><div className="album-grid">{tracks.slice(0, 4).map(t => <button className="album-card" key={t.id} onClick={() => playTrack(t)}><div className="album-cover"><img src={t.cover} alt=""/><span className="album-play"><Play fill="currentColor" size={20}/></span></div><strong>{t.title}</strong><span>{t.artist}</span></button>)}</div></section>}
         <footer>© 2026 NEXMUSIC <span>Сделано для музыки.</span><span className="footer-free">100% FREE</span></footer>
