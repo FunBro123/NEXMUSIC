@@ -46,6 +46,7 @@ export default function App() {
   const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
+  const [yandexSearchUrl, setYandexSearchUrl] = useState("");
   const [yandexEmbedInput, setYandexEmbedInput] = useState("");
   const [yandexEmbedUrl, setYandexEmbedUrl] = useState(() => localStorage.getItem("nexmusic.yandexEmbedUrl.v1") || "");
   const [yandexEmbedError, setYandexEmbedError] = useState("");
@@ -246,6 +247,7 @@ export default function App() {
     const url = provider === "Яндекс Музыка"
       ? "https://music.yandex.ru/search?text=" + encodeURIComponent(query)
       : "https://zvuk.com/search?query=" + encodeURIComponent(query);
+    if (provider === "Яндекс Музыка") { setYandexSearchUrl(url); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   };
   const nav = [{ label: "Главная", icon: Home }, { label: "Моя волна", icon: Sparkles }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Моё любимое", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }, { label: "Профиль", icon: UserCircle }];
@@ -351,7 +353,8 @@ export default function App() {
               <button className="primary-btn compact" onClick={() => openProviderSearch("Яндекс Музыка")}>Искать в Яндекс Музыке</button>
               <button className="primary-btn compact" onClick={() => openProviderSearch("Звук")}>Искать в Звуке</button>
             </div>
-            <p className="metadata-note">Важно: воспроизведение пока запускается на официальном сайте или в приложении сервиса, а не внутри NEXMUSIC. Для встроенного онлайн-плеера нужно официальное разрешение и поддерживаемый интерфейс интеграции от правообладателя сервиса. NEXMUSIC не получает и не хранит аудиопотоки.</p>
+            {yandexSearchUrl && <div className="yandex-search-panel"><div className="yandex-search-heading"><strong>Поиск Яндекс Музыки</strong><button className="text-btn" onClick={() => setYandexSearchUrl("")}>Закрыть</button></div><div className="yandex-search-frame"><iframe src={yandexSearchUrl} title="Поиск Яндекс Музыки" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"/></div><a className="yandex-search-fallback" href={yandexSearchUrl} target="_blank" rel="noreferrer">Если поиск не загрузился — открыть отдельно</a></div>}
+            <p className="metadata-note">Встроенный поиск работает только если Яндекс разрешает показывать страницу внутри приложения. Если сервис блокирует iframe, открой официальный поиск по ссылке. NEXMUSIC не извлекает защищённые аудиопотоки.</p>
           </div>
           <div className="service-import-card glass yandex-embed-card">
             <div className="eyebrow muted">ВСТРОЕННЫЙ ПЛЕЕР · ЯНДЕКС МУЗЫКА</div>
