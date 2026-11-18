@@ -149,3 +149,180 @@
 /* Compact layout pass */
 .content{padding:22px}.topbar{height:62px;padding:0 22px}.section{margin-top:22px}.section-heading{margin-bottom:14px}.section-heading h2{font-size:20px}.hero{min-height:260px;padding:26px}.hero h1{font-size:42px}.quick-card{height:64px;padding:12px}.album-grid{gap:12px}.album-card{padding:9px}.track-row{height:56px}.track-info img{width:36px;height:36px}.player-bar{height:78px;padding:0 20px;gap:16px}.now-playing img{width:40px;height:40px}.play-main{width:32px;height:32px}.player-controls{gap:12px;margin-bottom:5px}.service-import-card{padding:18px;margin-top:16px}.service-import-card h3{font-size:17px}.service-provider-grid{gap:10px;margin:14px 0}.service-provider{padding:12px}.metadata-field{gap:6px;margin:12px 0}.metadata-field input{height:40px}.service-import-textarea{min-height:110px;padding:10px;font-size:11px}.online-provider-actions{gap:8px;margin:12px 0 8px}.yandex-search-panel{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18)}.yandex-search-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12px}.yandex-search-frame{height:min(62vh,560px);min-height:300px;overflow:hidden;border-radius:9px;background:#fff}.yandex-search-frame iframe{width:100%;height:100%;border:0;background:#fff}.yandex-search-fallback{display:inline-block;margin-top:10px;color:#c9b8ff;font-size:11px}
 @media(max-width:760px){.content{padding:15px 13px}.topbar{height:56px;padding:0 13px}.section{margin-top:18px}.hero{min-height:300px;padding:20px 17px}.hero h1{font-size:36px}.quick-card{height:58px}.album-grid{gap:7px}.album-card{padding:5px}.track-row{height:52px}.player-bar{height:126px;padding:7px 12px;grid-template-rows:48px 58px}.service-import-card{padding:14px}.service-provider{padding:10px}.yandex-search-frame{height:58vh;min-height:260px}}
+
+
+/* NEXMUSIC compact interface v2 — denser layout on desktop and mobile */
+.app-shell{padding-bottom:82px}
+.sidebar{width:205px;inset:0 auto 76px 0;padding:18px 12px 12px}
+.brand{height:34px;gap:8px;font-size:17px;margin:0 7px 25px}
+.brand-mark{width:29px;height:29px;border-radius:9px}
+.nav-label{margin:0 9px 8px;font-size:9px}
+.sidebar nav{gap:2px}
+.nav-item{height:36px;border-radius:8px;gap:9px;padding:0 9px;font-size:11px}
+.sidebar-divider{margin:14px 3px}
+.storage-card{padding:9px;gap:8px;border-radius:10px}
+.storage-icon{width:29px;height:29px;border-radius:8px}
+.free-note{padding-top:10px;font-size:9px}
+.main-area{margin-left:205px;min-height:calc(100vh - 76px)}
+.topbar{height:54px;padding:0 20px}
+.top-actions{gap:12px}
+.search-box{height:33px;width:min(280px,32vw);border-radius:8px;padding:0 9px}
+.content{padding:17px 20px 18px}
+.glass{border-radius:15px}
+.hero{min-height:205px;padding:20px 24px}
+.hero h1{font-size:36px;margin:12px 0 8px;letter-spacing:-2px}
+.hero p{font-size:11px;line-height:1.5;margin-bottom:15px}
+.hero-art{width:220px;height:220px;right:5%}
+.hero-disc{width:150px;height:150px}
+.disc-center{width:55px;height:55px}
+.orbit-one{width:205px;height:88px}
+.orbit-two{width:230px;height:118px}
+.floating-chip{padding:6px 8px;font-size:8px}
+.section{margin-top:18px}
+.section-heading{margin-bottom:10px}
+.section-heading h2{font-size:17px;margin-top:4px}
+.eyebrow,.nav-label{letter-spacing:1px}
+.eyebrow{font-size:9px}
+.section-sub{font-size:10px;margin-top:4px}
+.quick-grid{gap:8px}
+.quick-card{height:55px;padding:0 10px;gap:9px;border-radius:10px}
+.quick-icon{width:31px;height:31px;border-radius:9px}
+.quick-card strong{font-size:11px}
+.quick-card span{font-size:9px;margin-top:3px}
+.album-grid{gap:8px}
+.album-card{padding:6px;border-radius:10px}
+.album-cover{border-radius:8px;margin-bottom:7px}
+.album-card strong{font-size:11px}
+.album-card>span{font-size:9px;margin-top:3px}
+.track-head,.track-row{gap:8px;padding:0 8px}
+.track-head{height:29px;font-size:8px}
+.track-row{height:48px}
+.track-info{gap:8px}
+.track-info img{width:31px;height:31px;border-radius:6px}
+.track-info strong{font-size:10px}
+.track-info small{font-size:9px;margin-top:3px}
+.track-number,.track-duration,.track-album{font-size:9px}
+.heart-btn,.control-btn,.icon-btn{padding:4px}
+.empty-state{min-height:160px;gap:8px}
+.empty-state strong{font-size:12px}
+.empty-state span{font-size:10px}
+.player-bar{height:68px;padding:0 16px;gap:12px;grid-template-columns:1fr 1.2fr .8fr}
+.now-playing{gap:8px}
+.now-playing img{width:34px;height:34px;border-radius:6px}
+.now-playing strong{font-size:10px}
+.now-playing span{font-size:9px;margin-top:3px}
+.player-center{max-width:410px}
+.player-controls{gap:10px;margin-bottom:3px}
+.control-btn{width:24px;height:24px}
+.play-main{width:29px;height:29px}
+.timeline{gap:7px;font-size:8px}
+.player-extra{gap:7px}
+.volume-range{width:58px}
+.quality{font-size:8px;padding:4px 5px}
+.primary-btn{height:36px;padding:0 12px;font-size:10px;border-radius:8px}
+.compact{height:32px;font-size:10px}
+.text-btn{font-size:10px;padding:5px}
+.playlist-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
+.playlist-open{padding:10px}
+.playlist-art{margin-bottom:8px;border-radius:8px}
+.playlist-open strong{font-size:11px}
+.playlist-detail{margin-top:15px;padding:14px}
+.playlist-detail-heading h3{font-size:16px}
+.playlist-track{min-height:46px;gap:8px;padding:5px 7px}
+.playlist-track>img{width:32px;height:32px}
+.service-provider-grid{gap:8px;margin:12px 0}
+.service-provider{gap:9px;padding:10px;border-radius:11px}
+.service-provider-logo{width:31px;height:31px;border-radius:9px;font-size:17px}
+.service-provider strong{font-size:11px}
+.service-provider span{font-size:9px}
+.service-import-card{padding:14px;margin-top:13px}
+.service-import-card h3{font-size:15px;margin:6px 0}
+.service-import-card>p{font-size:10px;line-height:1.5}
+.service-import-card .metadata-field{margin:11px 0}
+.metadata-field{font-size:10px;gap:5px}
+.metadata-field input{height:35px;padding:0 10px;font-size:11px}
+.service-import-textarea{min-height:85px;padding:8px;font-size:10px;line-height:1.5}
+.metadata-note{font-size:9px;line-height:1.45;margin:10px 0}
+.online-provider-actions{gap:7px;margin:9px 0 7px}
+.online-provider-actions .primary-btn{flex:1 1 160px}
+.yandex-embed-card{margin-bottom:12px}
+.yandex-embed-frame iframe{height:150px}
+.embed-empty{min-height:80px;font-size:10px}
+.wave-feature{padding:17px;gap:16px;border-radius:15px}
+.wave-feature-copy h2{font-size:21px;margin:5px 0}
+.wave-feature-copy p{font-size:11px;margin-bottom:10px}
+.wave-feature-art{width:90px;height:90px}
+.wave-page-hero{padding:17px;gap:17px;margin-bottom:17px;border-radius:15px}
+.wave-feature-art.large{width:105px;height:105px}
+.wave-page-hero h2{font-size:24px;margin:5px 0}
+.wave-page-hero p{font-size:11px;line-height:1.5}
+.profile-card{padding:15px;gap:12px}
+.profile-avatar{width:48px;height:48px}
+.profile-card h2{font-size:18px}
+.profile-stats{gap:8px;margin:12px 0}
+.profile-stats>div{padding:12px;border-radius:10px}
+.profile-stats strong{font-size:19px}
+.profile-stats span{font-size:9px}
+.profile-note{padding:13px;font-size:11px}
+footer{margin-top:22px;padding-top:12px;font-size:9px}
+@media(max-width:1100px){
+ .sidebar{width:185px;padding:16px 10px 10px}
+ .main-area{margin-left:185px}
+ .content{padding:15px}
+ .topbar{padding:0 15px}
+ .hero{min-height:185px;padding:18px}
+ .hero-art{transform:scale(.75);right:0}
+ .player-bar{padding:0 12px;gap:8px}
+}
+@media(max-width:760px){
+ .app-shell{padding-bottom:112px}
+ .sidebar{width:245px;bottom:0;padding:17px 12px 12px}
+ .main-area{margin-left:0;min-height:calc(100vh - 112px)}
+ .topbar{height:48px;padding:0 10px}
+ .content{padding:11px 10px}
+ .hero{min-height:185px;padding:16px 13px}
+ .hero h1{font-size:30px;margin:10px 0 6px}
+ .hero p{font-size:10px;max-width:210px}
+ .hero-art{width:155px;height:155px;right:-23px;bottom:-16px;transform:scale(.72);opacity:.55}
+ .section{margin-top:14px}
+ .section-heading{margin-bottom:8px}
+ .section-heading h2{font-size:15px}
+ .quick-grid{grid-template-columns:1fr 1fr;gap:6px}
+ .quick-card{height:48px;padding:0 7px;gap:6px}
+ .quick-icon{width:27px;height:27px}
+ .quick-card strong{font-size:10px}
+ .quick-card span{font-size:8px}
+ .album-grid{gap:6px}
+ .album-card{padding:4px}
+ .track-head,.track-row{grid-template-columns:20px minmax(90px,1fr) 38px;gap:5px;padding:0 3px}
+ .track-row{height:44px}
+ .track-info{gap:6px}
+ .track-info img{width:29px;height:29px}
+ .track-info strong{font-size:9px}
+ .track-info small{font-size:8px}
+ .player-bar{height:102px;grid-template-columns:1fr auto;grid-template-rows:42px 48px;padding:5px 9px;gap:1px 6px}
+ .now-playing img{width:31px;height:31px}
+ .player-extra{gap:4px}
+ .player-center{grid-column:1/3;grid-row:2}
+ .player-controls{gap:13px;margin-bottom:1px}
+ .play-main{width:27px;height:27px}
+ .timeline{gap:5px}
+ .service-import-card{padding:11px}
+ .service-provider-grid{grid-template-columns:1fr 1fr}
+ .service-provider{padding:8px}
+ .service-provider-logo{width:27px;height:27px}
+ .service-import-card>p{font-size:9px}
+ .yandex-embed-frame iframe{height:140px}
+ .wave-feature{padding:12px;gap:9px}
+ .wave-feature-copy h2{font-size:18px}
+ .wave-feature-copy p{font-size:9px}
+ .wave-feature-art{width:70px;height:70px}
+ .wave-page-hero{padding:12px;gap:10px}
+ .wave-feature-art.large{width:72px;height:72px}
+ .wave-page-hero h2{font-size:19px}
+ .wave-page-hero p{font-size:9px}
+ .profile-card{padding:12px}
+ .profile-stats>div{padding:9px}
+ .profile-stats strong{font-size:16px}
+ footer{margin-top:16px}
+}
