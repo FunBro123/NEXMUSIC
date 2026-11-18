@@ -45,6 +45,7 @@ export default function App() {
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
+  const [serviceSearchQuery, setServiceSearchQuery] = useState("");
   const [playlistImportName, setPlaylistImportName] = useState("");
   const [playlistImportText, setPlaylistImportText] = useState("");
   const [playlistImportResult, setPlaylistImportResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
@@ -193,6 +194,17 @@ export default function App() {
     setPlaylistImportResult({ matched: playlist.trackIds.length, unmatched });
     setPlaylistImportText("");
   };
+  const openProviderSearch = (provider: "Яндекс Музыка" | "Звук") => {
+    const query = serviceSearchQuery.trim();
+    if (!query) {
+      window.alert("Сначала введи название трека или исполнителя.");
+      return;
+    }
+    const url = provider === "Яндекс Музыка"
+      ? "https://music.yandex.ru/search?text=" + encodeURIComponent(query)
+      : "https://zvuk.com/search?query=" + encodeURIComponent(query);
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
   const nav = [{ label: "Главная", icon: Home }, { label: "Моя волна", icon: Sparkles }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Моё любимое", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }, { label: "Профиль", icon: UserCircle }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
   const submitAuth = (event: FormEvent<HTMLFormElement>) => {
@@ -286,6 +298,17 @@ export default function App() {
           <div className="service-provider-grid">
             <article className={playlistImportSource === "Яндекс Музыка" ? "service-provider selected" : "service-provider"}><div className="service-provider-logo yandex-logo">Я</div><div><strong>Яндекс Музыка</strong><span>Источник плейлиста</span></div><button className="text-btn" onClick={() => { setPlaylistImportSource("Яндекс Музыка"); setPlaylistImportResult(null); }}>Выбрать</button></article>
             <article className={playlistImportSource === "Звук" ? "service-provider selected" : "service-provider"}><div className="service-provider-logo zvuk-logo">З</div><div><strong>Звук</strong><span>Источник плейлиста</span></div><button className="text-btn" onClick={() => { setPlaylistImportSource("Звук"); setPlaylistImportResult(null); }}>Выбрать</button></article>
+          </div>
+          <div className="service-import-card glass online-search-card">
+            <div className="eyebrow muted">ОНЛАЙН-ПОИСК</div>
+            <h3>Найти и слушать музыку</h3>
+            <p>Введи трек или исполнителя. NEXMUSIC откроет официальный поиск выбранного сервиса, где можно запустить воспроизведение в соответствии с правилами и доступом твоего аккаунта.</p>
+            <label className="metadata-field"><span>Трек или исполнитель</span><input value={serviceSearchQuery} onChange={event => setServiceSearchQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") openProviderSearch(playlistImportSource); }} placeholder="Например, Miyagi или название трека"/></label>
+            <div className="online-provider-actions">
+              <button className="primary-btn compact" onClick={() => openProviderSearch("Яндекс Музыка")}>Искать в Яндекс Музыке</button>
+              <button className="primary-btn compact" onClick={() => openProviderSearch("Звук")}>Искать в Звуке</button>
+            </div>
+            <p className="metadata-note">Важно: воспроизведение пока запускается на официальном сайте или в приложении сервиса, а не внутри NEXMUSIC. Для встроенного онлайн-плеера нужно официальное разрешение и поддерживаемый интерфейс интеграции от правообладателя сервиса. NEXMUSIC не получает и не хранит аудиопотоки.</p>
           </div>
           <div className="service-import-card glass">
             <div className="eyebrow muted">ШАГ 1 · ПОДГОТОВЬ СПИСОК</div><h3>Импорт плейлиста</h3>
