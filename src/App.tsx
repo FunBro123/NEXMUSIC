@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { loadAudioFiles, saveAudioFiles } from "./libraryStorage";
 import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
@@ -46,6 +47,13 @@ export default function App() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { localStorage.setItem("nexmusic.favorites", JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => {
+    let cancelled = false;
+    loadAudioFiles().then(saved => {
+      if (!cancelled && saved.length) setTracks(old => [...saved, ...old.filter(track => !saved.some(item => item.id === track.id))]);
+    }).catch(error => console.warn("NEXMUSIC library restore:", error));
+    return () => { cancelled = true; };
+  }, []);
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume / 100; }, [volume]);
   useEffect(() => {
     const audio = audioRef.current;
@@ -83,15 +91,19 @@ export default function App() {
     const index = tracks.findIndex(t => t.id === current.id);
     playTrack(tracks[(index - 1 + tracks.length) % tracks.length]);
   };
-  const importFiles = (files?: FileList | null) => {
+  const importFiles = async (files?: FileList | null) => {
     if (!files) return;
-    const added = Array.from(files).filter(f => f.type.startsWith("audio/")).map((file, i) => ({
-      id: Date.now() + i, title: file.name.replace(/\.[^.]+$/, ""), artist: "Локальный файл",
-      album: "Моя музыка", duration: "—", cover: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&q=85",
-      src: URL.createObjectURL(file)
-    }));
-    setTracks(old => [...added, ...old]);
-    if (added[0]) { setCurrent(added[0]); setPlaying(true); setActive("Медиатека"); }
+    const audioFiles = Array.from(files).filter(file => file.type.startsWith("audio/"));
+    if (!audioFiles.length) return;
+    try {
+      const saved = await saveAudioFiles(audioFiles);
+      const added: Track[] = saved.map(({ file, ...track }) => ({ ...track, src: URL.createObjectURL(file) }));
+      setTracks(old => [...added, ...old]);
+      if (added[0]) { setCurrent(added[0]); setPlaying(true); setActive("Медиатека"); }
+    } catch (error) {
+      console.error("NEXMUSIC import failed:", error);
+      window.alert("Не удалось сохранить музыку на устройстве. Проверь свободное место и разрешения браузера.");
+    }
   };
   const nav = [{ label: "Главная", icon: Home }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Избранное", icon: Heart }, { label: "Плейлисты", icon: ListMusic }];
   const formatTime = (n: number) => !Number.isFinite(n) ? "0:00" : Math.floor(n / 60) + ":" + String(Math.floor(n % 60)).padStart(2, "0");
@@ -162,7 +174,7 @@ export default function App() {
         {(active === "Медиатека" || active === "Избранное" || active === "Поиск" || active === "Плейлисты") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
           {visibleTracks.length ? <div className="track-table"><div className="track-head"><span>#</span><span>НАЗВАНИЕ</span><span>АЛЬБОМ</span><span><Clock3 size={14}/></span><span/></div>{visibleTracks.map((track, i) => <div className={current.id === track.id ? "track-row active-track" : "track-row"} key={track.id} onDoubleClick={() => playTrack(track)}><span className="track-number">{current.id === track.id && playing ? <AudioLines size={16}/> : String(i + 1).padStart(2, "0")}</span><button className="track-info" onClick={() => playTrack(track)}><img src={track.cover} alt=""/><span><strong>{track.title}</strong><small>{track.artist}</small></span></button><span className="track-album">{track.album}</span><span className="track-duration">{track.duration}</span><button className={favorites.includes(track.id) ? "heart-btn liked" : "heart-btn"} onClick={() => toggleFavorite(track.id)} aria-label="В избранное"><Heart size={17} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button></div>)}</div> : <div className="empty-state"><Music2 size={34}/><strong>Здесь пока тихо</strong><span>Добавь аудиофайлы со своего устройства.</span><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Plus size={16}/> Добавить музыку</button></div>}
         </section>}
-        <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => importFiles(e.target.files)}/>
+        <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => { void importFiles(e.target.files); e.currentTarget.value = ""; }}/>
         {active === "Главная" && <section className="section"><div className="section-heading"><div><div className="eyebrow muted">НАЧНИ С ЭТОГО</div><h2>Недавно добавленное</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Все треки →</button></div><div className="album-grid">{tracks.slice(0, 4).map(t => <button className="album-card" key={t.id} onClick={() => playTrack(t)}><div className="album-cover"><img src={t.cover} alt=""/><span className="album-play"><Play fill="currentColor" size={20}/></span></div><strong>{t.title}</strong><span>{t.artist}</span></button>)}</div></section>}
         <footer>© 2026 NEXMUSIC <span>Сделано для музыки.</span><span className="footer-free">100% FREE</span></footer>
       </div>
