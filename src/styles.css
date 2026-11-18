@@ -42,3 +42,29 @@
 .telegram-panel button{margin-top:7px;padding:11px 17px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#ffffff08;color:#eee;font-size:11px}
 .auth-copyright{position:absolute;bottom:22px;color:#575a65;font-size:9px;letter-spacing:.7px}
 @media(max-width:480px){.auth-card{padding:35px 23px 24px;border-radius:21px}.auth-brand{margin-bottom:27px}.auth-brand h1{font-size:23px}.auth-copyright{bottom:12px}}
+
+
+/* Persistent playlist management */
+.playlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.playlist-card{position:relative;min-width:0;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));overflow:hidden;transition:.2s}
+.playlist-card:hover,.selected-playlist{border-color:#b49aff66;transform:translateY(-2px)}
+.playlist-open{width:100%;padding:15px 15px 13px;border:0;background:transparent;text-align:left;color:#f0eef7;display:flex;flex-direction:column;align-items:flex-start}
+.playlist-art{width:100%;aspect-ratio:1.65;border-radius:10px;display:grid;place-items:center;color:#c8b7ff;background:radial-gradient(circle at 25% 15%,#8d79c955,transparent 55%),linear-gradient(135deg,#29243b,#171923);margin-bottom:13px}
+.playlist-open strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.playlist-open span{font-size:10px;color:#858796;margin-top:5px}
+.playlist-actions{position:absolute;right:10px;top:10px;display:flex;gap:2px;padding:3px;border:1px solid #ffffff15;border-radius:9px;background:#11121bd9;backdrop-filter:blur(10px)}
+.playlist-actions .control-btn{width:27px;height:27px}
+.danger-control:hover{color:#ff8ca2}
+.playlist-detail{margin-top:24px;padding:20px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025)}
+.playlist-detail-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.playlist-detail-heading h3{font:700 19px Manrope,sans-serif;margin:7px 0 0}
+.playlist-track-list{display:grid;gap:5px}
+.playlist-track{min-height:58px;display:flex;align-items:center;gap:12px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.025)}
+.playlist-track>img{width:40px;height:40px;object-fit:cover;border-radius:7px}
+.playlist-track>div{min-width:0;flex:1}
+.playlist-track>div strong,.playlist-track>div span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playlist-track>div strong{font-size:11px}
+.playlist-track>div span{font-size:10px;color:#858796;margin-top:4px}
+.playlist-toggle{padding:7px 10px;border:1px solid #b49aff45;border-radius:8px;background:#b49aff12;color:#c9b8ff;font-size:10px;white-space:nowrap}
+.playlist-toggle.included{border-color:#7bd8c044;background:#7bd8c014;color:#83d8c6}
+@media(max-width:600px){.playlist-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.playlist-open{padding:10px}.playlist-detail{padding:13px}.playlist-track{gap:8px;padding:6px}.playlist-toggle{padding:7px 8px;font-size:9px}}
