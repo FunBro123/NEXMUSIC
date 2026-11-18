@@ -46,7 +46,6 @@ export default function App() {
   const [metadataDraft, setMetadataDraft] = useState<TrackMetadata>({ title: "", artist: "", album: "" });
   const [playlistImportSource, setPlaylistImportSource] = useState<"Яндекс Музыка" | "Звук">("Яндекс Музыка");
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
-  const [yandexSearchUrl, setYandexSearchUrl] = useState("");
   const [yandexEmbedInput, setYandexEmbedInput] = useState("");
   const [yandexEmbedUrl, setYandexEmbedUrl] = useState(() => localStorage.getItem("nexmusic.yandexEmbedUrl.v1") || "");
   const [yandexEmbedError, setYandexEmbedError] = useState("");
@@ -247,7 +246,6 @@ export default function App() {
     const url = provider === "Яндекс Музыка"
       ? "https://music.yandex.ru/search?text=" + encodeURIComponent(query)
       : "https://zvuk.com/search?query=" + encodeURIComponent(query);
-    if (provider === "Яндекс Музыка") { setYandexSearchUrl(url); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   };
   const nav = [{ label: "Главная", icon: Home }, { label: "Моя волна", icon: Sparkles }, { label: "Поиск", icon: Search }, { label: "Медиатека", icon: Library }, { label: "Моё любимое", icon: Heart }, { label: "Плейлисты", icon: ListMusic }, { label: "Сервисы", icon: Headphones }, { label: "Профиль", icon: UserCircle }];
@@ -347,20 +345,19 @@ export default function App() {
           <div className="service-import-card glass online-search-card">
             <div className="eyebrow muted">ОНЛАЙН-ПОИСК</div>
             <h3>Найти и слушать музыку</h3>
-            <p>Введи трек или исполнителя. NEXMUSIC откроет официальный поиск выбранного сервиса, где можно запустить воспроизведение в соответствии с правилами и доступом твоего аккаунта.</p>
+            <p>Найди трек в официальном каталоге. Чтобы слушать его внутри NEXMUSIC, скопируй ссылку «Поделиться» на найденный трек и добавь её во встроенный плеер ниже.</p>
             <label className="metadata-field"><span>Трек или исполнитель</span><input value={serviceSearchQuery} onChange={event => setServiceSearchQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") openProviderSearch(playlistImportSource); }} placeholder="Например, Miyagi или название трека"/></label>
             <div className="online-provider-actions">
               <button className="primary-btn compact" onClick={() => openProviderSearch("Яндекс Музыка")}>Искать в Яндекс Музыке</button>
               <button className="primary-btn compact" onClick={() => openProviderSearch("Звук")}>Искать в Звуке</button>
             </div>
-            {yandexSearchUrl && <div className="yandex-search-panel"><div className="yandex-search-heading"><strong>Поиск Яндекс Музыки</strong><button className="text-btn" onClick={() => setYandexSearchUrl("")}>Закрыть</button></div><div className="yandex-search-frame"><iframe src={yandexSearchUrl} title="Поиск Яндекс Музыки" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"/></div><a className="yandex-search-fallback" href={yandexSearchUrl} target="_blank" rel="noreferrer">Если поиск не загрузился — открыть отдельно</a></div>}
-            <p className="metadata-note">Встроенный поиск работает только если Яндекс разрешает показывать страницу внутри приложения. Если сервис блокирует iframe, открой официальный поиск по ссылке. NEXMUSIC не извлекает защищённые аудиопотоки.</p>
+            <p className="metadata-note">Поиск открывается на стороне Яндекса. Само воспроизведение выбранного трека можно вернуть в NEXMUSIC через официальный код вставки — поле «Слушать прямо в NEXMUSIC» ниже.</p>
           </div>
           <div className="service-import-card glass yandex-embed-card">
             <div className="eyebrow muted">ВСТРОЕННЫЙ ПЛЕЕР · ЯНДЕКС МУЗЫКА</div>
             <h3>Слушать прямо в NEXMUSIC</h3>
-            <p>Вставь обычную ссылку «Поделиться» на трек или альбом из Яндекс Музыки. NEXMUSIC преобразует её в официальный встроенный плеер — скачивать аудиофайл не нужно.</p>
-            <label className="metadata-field"><span>Ссылка или HTML-код вставки</span><textarea className="service-import-textarea" value={yandexEmbedInput} onChange={event => { setYandexEmbedInput(event.target.value); setYandexEmbedError(""); }} placeholder="https://music.yandex.ru/album/419460/track/71263" rows={3}/></label>
+            <p>После поиска открой меню нужного трека в Яндекс Музыке → «Поделиться» → скопируй ссылку. Вставь её сюда: NEXMUSIC откроет официальный плеер трека прямо в приложении. Скачивать аудиофайл не нужно.</p>
+            <label className="metadata-field"><span>Ссылка на трек или альбом</span><textarea className="service-import-textarea" value={yandexEmbedInput} onChange={event => { setYandexEmbedInput(event.target.value); setYandexEmbedError(""); }} placeholder="https://music.yandex.ru/album/419460/track/71263" rows={3}/></label>
             <div className="online-provider-actions">
               <button className="primary-btn compact" onClick={addYandexEmbed}>Добавить в плеер</button>
               {yandexEmbedUrl && <button className="text-btn" onClick={clearYandexEmbed}>Удалить трек</button>}
