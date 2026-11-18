@@ -5,10 +5,11 @@ import {
   AudioLines, Search, Home, Library, Heart, ListMusic, Plus, Play, Pause,
   SkipBack, SkipForward, Volume2, VolumeX, MoreHorizontal, Music2, Disc3,
   Clock3, Shuffle, Repeat, Upload, Headphones, PanelLeftClose, Menu, X,
-  Sparkles, Eye, EyeOff, Send, ArrowLeft, Mail, LockKeyhole
+  Sparkles, Eye, EyeOff, Send, ArrowLeft, Mail, LockKeyhole, Trash2, Pencil
 } from "lucide-react";
 
 type Track = { id: number; title: string; artist: string; album: string; duration: string; cover: string; src?: string };
+type Playlist = { id: number; name: string; trackIds: number[] };
 
 const demoTracks: Track[] = [
   { id: 1, title: "Midnight City", artist: "M83", album: "Hurry Up, We're Dreaming", duration: "4:03", cover: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=500&q=85" },
@@ -19,7 +20,7 @@ const demoTracks: Track[] = [
   { id: 6, title: "Weightless", artist: "Washed Out", album: "Within and Without", duration: "4:40", cover: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=500&q=85" }
 ];
 
-const readSaved = (key: string, fallback: number[]) => {
+const readSaved = <T,>(key: string, fallback: T): T => {
   try { return JSON.parse(localStorage.getItem(key) || "null") ?? fallback; } catch { return fallback; }
 };
 
@@ -36,7 +37,9 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [active, setActive] = useState("Главная");
   const [query, setQuery] = useState("");
-  const [favorites, setFavorites] = useState<number[]>(() => readSaved("nexmusic.favorites", []));
+  const [favorites, setFavorites] = useState<number[]>(() => readSaved<number[]>("nexmusic.favorites", []));
+  const [playlists, setPlaylists] = useState<Playlist[]>(() => readSaved<Playlist[]>("nexmusic.playlists.v1", []));
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
   const [volume, setVolume] = useState(72);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,6 +50,7 @@ export default function App() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { localStorage.setItem("nexmusic.favorites", JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem("nexmusic.playlists.v1", JSON.stringify(playlists)); }, [playlists]);
   useEffect(() => {
     let cancelled = false;
     loadAudioFiles().then(saved => {
@@ -81,6 +85,28 @@ export default function App() {
   }, [tracks, active, favorites, query]);
 
   const toggleFavorite = (id: number) => setFavorites(v => v.includes(id) ? v.filter(x => x !== id) : [...v, id]);
+  const createPlaylist = () => {
+    const name = window.prompt("Название нового плейлиста:");
+    if (!name?.trim()) return;
+    const playlist: Playlist = { id: Date.now(), name: name.trim().slice(0, 40), trackIds: [] };
+    setPlaylists(old => [...old, playlist]);
+    setSelectedPlaylistId(playlist.id);
+  };
+  const renamePlaylist = (playlist: Playlist) => {
+    const name = window.prompt("Новое название плейлиста:", playlist.name);
+    if (!name?.trim()) return;
+    setPlaylists(old => old.map(item => item.id === playlist.id ? { ...item, name: name.trim().slice(0, 40) } : item));
+  };
+  const deletePlaylist = (playlist: Playlist) => {
+    if (!window.confirm("Удалить плейлист «" + playlist.name + "»? Сами аудиофайлы останутся в медиатеке.")) return;
+    setPlaylists(old => old.filter(item => item.id !== playlist.id));
+    if (selectedPlaylistId === playlist.id) setSelectedPlaylistId(null);
+  };
+  const togglePlaylistTrack = (playlistId: number, trackId: number) => {
+    setPlaylists(old => old.map(item => item.id !== playlistId ? item : {
+      ...item, trackIds: item.trackIds.includes(trackId) ? item.trackIds.filter(id => id !== trackId) : [...item.trackIds, trackId]
+    }));
+  };
   const playTrack = (track: Track) => { setCurrent(track); setPlaying(Boolean(track.src)); };
   const nextTrack = () => {
     const index = tracks.findIndex(t => t.id === current.id);
@@ -171,8 +197,27 @@ export default function App() {
           <section className="hero glass"><div className="hero-glow"/><div className="hero-copy"><div className="eyebrow"><span className="pulse"/> ТВОЁ МУЗЫКАЛЬНОЕ ПРОСТРАНСТВО</div><h1>Звук, который<br/><span>твой.</span></h1><p>Открой любимые треки. Создавай настроение. Слушай по-своему.</p><button className="primary-btn" onClick={() => { const local = tracks.find(t => t.src); if (local) playTrack(local); else setActive("Медиатека"); }}><Play size={17} fill="currentColor"/> Открыть медиатеку</button></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-disc"><div className="disc-center"><AudioLines size={36}/></div></div><div className="floating-chip chip-one"><AudioLines size={15}/> PURE SOUND</div><div className="floating-chip chip-two"><span className="equalizer"><i/><i/><i/><i/></span> NOW PLAYING</div></div></section>
           <section className="section"><div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Быстрый доступ</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Вся медиатека <span>→</span></button></div><div className="quick-grid"><button className="quick-card quick-fav" onClick={() => setActive("Избранное")}><div className="quick-icon"><Heart fill="currentColor"/></div><div><strong>Избранное</strong><span>{favorites.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-library" onClick={() => setActive("Медиатека")}><div className="quick-icon"><Disc3/></div><div><strong>Моя музыка</strong><span>{tracks.length} треков</span></div><Play size={17}/></button><button className="quick-card quick-playlist" onClick={() => fileRef.current?.click()}><div className="quick-icon"><Plus/></div><div><strong>Добавить треки</strong><span>С устройства</span></div><Upload size={17}/></button></div></section>
         </>}
-        {(active === "Медиатека" || active === "Избранное" || active === "Поиск" || active === "Плейлисты") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
+        {(active === "Медиатека" || active === "Избранное" || active === "Поиск") && <section className="section library-section"><div className="section-heading"><div><div className="eyebrow muted">{active === "Избранное" ? "СОХРАНЁННОЕ" : "ТВОЯ МУЗЫКА"}</div><h2>{active === "Поиск" ? "Результаты поиска" : active}</h2><p className="section-sub">{visibleTracks.length} треков в коллекции</p></div><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Upload size={16}/> Добавить музыку</button></div>
           {visibleTracks.length ? <div className="track-table"><div className="track-head"><span>#</span><span>НАЗВАНИЕ</span><span>АЛЬБОМ</span><span><Clock3 size={14}/></span><span/></div>{visibleTracks.map((track, i) => <div className={current.id === track.id ? "track-row active-track" : "track-row"} key={track.id} onDoubleClick={() => playTrack(track)}><span className="track-number">{current.id === track.id && playing ? <AudioLines size={16}/> : String(i + 1).padStart(2, "0")}</span><button className="track-info" onClick={() => playTrack(track)}><img src={track.cover} alt=""/><span><strong>{track.title}</strong><small>{track.artist}</small></span></button><span className="track-album">{track.album}</span><span className="track-duration">{track.duration}</span><button className={favorites.includes(track.id) ? "heart-btn liked" : "heart-btn"} onClick={() => toggleFavorite(track.id)} aria-label="В избранное"><Heart size={17} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button></div>)}</div> : <div className="empty-state"><Music2 size={34}/><strong>Здесь пока тихо</strong><span>Добавь аудиофайлы со своего устройства.</span><button className="primary-btn compact" onClick={() => fileRef.current?.click()}><Plus size={16}/> Добавить музыку</button></div>}
+        </section>}
+        {active === "Плейлисты" && <section className="section playlist-section">
+          <div className="section-heading"><div><div className="eyebrow muted">ТВОЯ КОЛЛЕКЦИЯ</div><h2>Плейлисты</h2><p className="section-sub">{playlists.length} плейлистов · сохраняются на этом устройстве</p></div><button className="primary-btn compact" onClick={createPlaylist}><Plus size={16}/> Создать плейлист</button></div>
+          {!playlists.length ? <div className="empty-state"><ListMusic size={34}/><strong>Плейлистов пока нет</strong><span>Создай первый плейлист и собери в нём любимые треки.</span><button className="primary-btn compact" onClick={createPlaylist}><Plus size={16}/> Создать плейлист</button></div> : <>
+            <div className="playlist-grid">{playlists.map(playlist => <article className={selectedPlaylistId === playlist.id ? "playlist-card selected-playlist" : "playlist-card"} key={playlist.id}>
+              <button className="playlist-open" onClick={() => setSelectedPlaylistId(playlist.id)}><div className="playlist-art"><ListMusic size={30}/></div><strong>{playlist.name}</strong><span>{playlist.trackIds.length} треков</span></button>
+              <div className="playlist-actions"><button className="control-btn" aria-label="Переименовать" onClick={() => renamePlaylist(playlist)}><Pencil size={15}/></button><button className="control-btn danger-control" aria-label="Удалить" onClick={() => deletePlaylist(playlist)}><Trash2 size={15}/></button></div>
+            </article>)}</div>
+            {playlists.filter(item => item.id === selectedPlaylistId).map(playlist => {
+              const playlistTracks = playlist.trackIds.map(id => tracks.find(track => track.id === id)).filter((track): track is Track => Boolean(track));
+              return <div className="playlist-detail" key={playlist.id}>
+                <div className="playlist-detail-heading"><div><div className="eyebrow muted">ВЫБРАННЫЙ ПЛЕЙЛИСТ</div><h3>{playlist.name}</h3><p className="section-sub">{playlistTracks.length} треков</p></div><button className="text-btn" onClick={() => setSelectedPlaylistId(null)}>Закрыть</button></div>
+                <div className="playlist-track-list">{tracks.map(track => {
+                  const included = playlist.trackIds.includes(track.id);
+                  return <div className="playlist-track" key={track.id}><img src={track.cover} alt=""/><div><strong>{track.title}</strong><span>{track.artist}</span></div><button className={included ? "playlist-toggle included" : "playlist-toggle"} onClick={() => togglePlaylistTrack(playlist.id, track.id)}>{included ? "Добавлено" : "＋ Добавить"}</button>{included && <button className="control-btn danger-control" aria-label="Убрать из плейлиста" onClick={() => togglePlaylistTrack(playlist.id, track.id)}><Trash2 size={15}/></button>}</div>;
+                })}</div>
+              </div>;
+            })}
+          </>}
         </section>}
         <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => { void importFiles(e.target.files); e.currentTarget.value = ""; }}/>
         {active === "Главная" && <section className="section"><div className="section-heading"><div><div className="eyebrow muted">НАЧНИ С ЭТОГО</div><h2>Недавно добавленное</h2></div><button className="text-btn" onClick={() => setActive("Медиатека")}>Все треки →</button></div><div className="album-grid">{tracks.slice(0, 4).map(t => <button className="album-card" key={t.id} onClick={() => playTrack(t)}><div className="album-cover"><img src={t.cover} alt=""/><span className="album-play"><Play fill="currentColor" size={20}/></span></div><strong>{t.title}</strong><span>{t.artist}</span></button>)}</div></section>}
