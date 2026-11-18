@@ -123,3 +123,18 @@
 .profile-stats strong,.profile-stats span{display:block}.profile-stats strong{font:700 24px Manrope,sans-serif}.profile-stats span{font-size:11px;color:var(--muted);margin-top:4px}
 .profile-note{padding:20px;border-radius:15px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.18);font-size:13px}.profile-note p{color:#aaa6ba;line-height:1.7;margin-bottom:0}
 @media(max-width:700px){.wave-feature{padding:18px;gap:16px}.wave-feature-art{width:92px;height:92px}.wave-feature-copy h2{font-size:22px}.wave-page-hero{padding:18px;gap:18px;align-items:flex-start}.wave-feature-art.large{width:90px;height:90px}.wave-page-hero h2{font-size:24px}.profile-card{padding:17px;gap:12px}.profile-avatar{width:48px;height:48px}.profile-stats>div{padding:14px}}
+
+
+.online-provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 10px;
+}
+.online-provider-actions .primary-btn {
+  flex: 1 1 220px;
+  justify-content: center;
+}
+.online-search-card {
+  margin-bottom: 20px;
+}
