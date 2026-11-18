@@ -64,6 +64,27 @@ export async function loadAudioFiles(): Promise<Array<Omit<StoredAudioTrack, "fi
   return records.map(({ file, ...track }) => ({ ...track, src: URL.createObjectURL(file) }));
 }
 
+export async function updateAudioMetadata(
+  id: number,
+  metadata: { title: string; artist: string; album: string }
+): Promise<void> {
+  const db = await openLibrary();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(id);
+    request.onsuccess = () => {
+      const record = request.result as StoredAudioTrack | undefined;
+      if (record) store.put({ ...record, ...metadata });
+    };
+    request.onerror = () => reject(request.error ?? new Error("Не удалось обновить теги трека."));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error ?? new Error("Не удалось обновить теги трека."));
+    tx.onabort = () => reject(tx.error ?? new Error("Обновление тегов отменено."));
+  });
+  db.close();
+}
+
 export async function deleteAudioFile(id: number): Promise<void> {
   const db = await openLibrary();
   await new Promise<void>((resolve, reject) => {
