@@ -34,7 +34,7 @@ export async function saveAudioFiles(files: File[]): Promise<StoredAudioTrack[]>
   const db = await openLibrary();
   const records = files.map((file, index) => ({
     id: Date.now() + index + Math.floor(Math.random() * 1000),
-    title: file.name.replace(/\\.[^.]+$/, ""),
+    title: file.name.replace(/\.[^.]+$/, ""),
     artist: "Локальный файл",
     album: "Моя музыка",
     duration: "—",
