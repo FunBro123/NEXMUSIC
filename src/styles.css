@@ -326,3 +326,39 @@ footer{margin-top:22px;padding-top:12px;font-size:9px}
  .profile-stats strong{font-size:16px}
  footer{margin-top:16px}
 }
+
+
+/* Native-app interaction polish: remove browser blue tap/focus flash */
+html, body, #root, .app-shell {
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, input, textarea, select, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  outline: none;
+}
+button:active, .nav-item:active, .quick-card:active, .album-card:active,
+.track-info:active, .playlist-open:active {
+  filter: brightness(1.12);
+}
+button:focus-visible, a:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid rgba(183, 157, 255, .82);
+  outline-offset: 2px;
+}
+input[type="range"] {
+  accent-color: #b69aff;
+}
+.yandex-embed-frame {
+  background: #101116;
+  border-color: rgba(183, 157, 255, .24);
+}
+.yandex-embed-frame iframe {
+  color-scheme: dark;
+}
