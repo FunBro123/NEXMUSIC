@@ -362,3 +362,47 @@ input[type="range"] {
 .yandex-embed-frame iframe {
   color-scheme: dark;
 }
+
+
+/* Android safe areas: keep the app below the system status bar and above navigation */
+html {
+  min-height: 100%;
+  background: #090a0f;
+}
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+}
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+}
+.topbar {
+  top: env(safe-area-inset-top, 0px);
+}
+.player-bar {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (max-width: 760px) {
+  .app-shell {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+  .topbar {
+    top: env(safe-area-inset-top, 0px);
+  }
+  .player-bar {
+    bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .sidebar {
+    padding-top: calc(17px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+}
